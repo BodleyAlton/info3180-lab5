@@ -42,11 +42,12 @@ def login():
             # store the result of that query to a `user` variable so it can be
             # passed to the login_user() method.
             user=UserProfile.query.filter_by(username=username, password=password).first()
+            print user
             # get user id, load into session
             login_user(user)
             flash("Login Successfull.",'success')
             # remember to flash a message to the user
-            return redirect(url_for("home")) # they should be redirected to a secure-page route instead
+            return redirect(url_for("secure_page")) # they should be redirected to a secure-page route instead
     return render_template("login.html", form=form)
 
 # user_loader callback. This callback is used to reload the user object from
@@ -54,6 +55,19 @@ def login():
 @login_manager.user_loader
 def load_user(id):
     return UserProfile.query.get(int(id))
+    
+@app.route('/secure-page/')
+@login_required
+def secure_page():
+    return render_template('secure_page.html')
+
+@app.route("/logout")
+@login_required
+def logout():
+    # Logout the user and end the session
+    logout_user()
+    flash('You have been logged out.', 'danger')
+    return redirect(url_for('home'))
 
 ###
 # The functions below should be applicable to all Flask apps.
@@ -64,7 +78,6 @@ def send_text_file(file_name):
     """Send your static text file."""
     file_dot_text = file_name + '.txt'
     return app.send_static_file(file_dot_text)
-
 
 @app.after_request
 def add_header(response):
